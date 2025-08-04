@@ -1,0 +1,84 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DFW Pokémon GO Campfire Groups</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Arial', sans-serif;
+      background: url('https://wallpapercave.com/wp/wp2764236.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+    }
+    header {
+      text-align: center;
+      background-color: rgba(0,0,0,0.7);
+      padding: 1rem;
+    }
+    header h1 {
+      font-family: 'Press Start 2P', cursive;
+      color: #FFCB05;
+      text-shadow: 2px 2px #2a75bb;
+      font-size: 1.2rem;
+    }
+    #map {
+      height: calc(100% - 100px);
+      z-index: 1;
+    }
+    .leaflet-popup-content a {
+      color: #2a75bb;
+      font-weight: bold;
+      text-decoration: underline;
+    }
+    .leaflet-popup-content {
+      font-family: Arial, sans-serif;
+    }
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>📍 DFW Pokémon GO Campfire Map</h1>
+  <p style="margin: 0; font-size: 0.9rem;">Tap a pin to join your local group!</p>
+</header>
+<div id="map"></div>
+<script>
+  const map = L.map('map').setView([32.7767, -96.7970], 9);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+  const sheetID = '1rDfnLeNngPFNtIafKqQhIfUMTNZgawao9GHMBJUAPG4';
+  const sheetName = 'Sheet1';
+  const csvURL = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
+  fetch(csvURL)
+    .then(response => response.text())
+    .then(csvText => {
+      const rows = csvText.trim().split('\n').slice(1);
+      rows.forEach(row => {
+        const [name, lat, lng, url, ambassador] = row.split(',');
+        if (!lat || !lng) return;
+        const isAmbassador = ambassador && ambassador.trim().toLowerCase() === 'yes';
+        const marker = L.marker([parseFloat(lat), parseFloat(lng)]).addTo(map);
+        marker.bindPopup(`
+          <strong style="color: #FFCB05;">${name}</strong><br>
+          <a href="${url}" target="_blank">Join Campfire Group</a><br>
+          ${isAmbassador ? '<span style="color:#00FF00; font-weight:bold;">🌟 Community Ambassador</span>' : ''}
+        `);
+      });
+    })
+    .catch(err => console.error('Error loading sheet data:', err));
+</script>
+</body>
+</html>
